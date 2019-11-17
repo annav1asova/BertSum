@@ -52,10 +52,10 @@ python preprocess.py -mode tokenize -raw_path RAW_PATH -save_path TOKENIZED_PATH
 ####  Step 4. Format to Simpler Json Files
  
 ```
-python preprocess.py -mode format_to_lines -raw_path RAW_PATH -save_path JSON_PATH -map_path MAP_PATH -lower 
+python preprocess.py -mode format_to_lines -raw_path RAW_PATH -save_path JSON_PATH -lower 
 ```
 
-* `RAW_PATH` is the directory containing tokenized files (`../merged_stories_tokenized`), `JSON_PATH` is the target directory to save the generated json files (`../json_data/cnndm`), `MAP_PATH` is the  directory containing the urls files (`../urls`)
+* `RAW_PATH` is the directory containing tokenized files (`../merged_stories_tokenized`), `JSON_PATH` is the target directory to save the generated json files (`../json_data/cnndm`)
 
 ####  Step 5. Format to PyTorch Files
 ```

@@ -7,6 +7,7 @@ import os
 import re
 import subprocess
 import time
+import random
 from os.path import join as pjoin
 
 import torch
@@ -177,6 +178,7 @@ class BertData():
         # text = [_clean(t) for t in text]
         text = ' [SEP] [CLS] '.join(src_txt)
         src_subtokens = self.tokenizer.tokenize(text)
+        # TODO: handle long sequences ??
         src_subtokens = src_subtokens[:510]
         src_subtokens = ['[CLS]'] + src_subtokens + ['[SEP]']
 
@@ -226,7 +228,7 @@ def tokenize(args):
     print("Making list of files to tokenize...")
     with open("mapping_for_corenlp.txt", "w") as f:
         for s in stories:
-            if (not s.endswith('story')):
+            if (not s.endswith('paper')):
                 continue
             f.write("%s\n" % (os.path.join(stories_dir, s)))
     command = ['java', 'edu.stanford.nlp.pipeline.StanfordCoreNLP' ,'-annotators', 'tokenize,ssplit', '-ssplit.newlineIsSentenceBreak', 'always', '-filelist', 'mapping_for_corenlp.txt', '-outputFormat', 'json', '-outputDirectory', tokenized_stories_dir]
@@ -259,7 +261,7 @@ def _format_to_bert(params):
     for d in jobs:
         source, tgt = d['src'], d['tgt']
         if (args.oracle_mode == 'greedy'):
-            oracle_ids = greedy_selection(source, tgt, 3)
+            oracle_ids = greedy_selection(source, tgt, 6)
         elif (args.oracle_mode == 'combination'):
             oracle_ids = combination_selection(source, tgt, 3)
         b_data = bert.preprocess(source, tgt, oracle_ids)
@@ -276,20 +278,14 @@ def _format_to_bert(params):
 
 
 def format_to_lines(args):
-    corpus_mapping = {}
-    for corpus_type in ['valid', 'test', 'train']:
-        temp = []
-        for line in open(pjoin(args.map_path, 'mapping_' + corpus_type + '.txt')):
-            temp.append(hashhex(line.strip()))
-        corpus_mapping[corpus_type] = {key.strip(): 1 for key in temp}
     train_files, valid_files, test_files = [], [], []
     for f in glob.glob(pjoin(args.raw_path, '*.json')):
-        real_name = f.split('/')[-1].split('.')[0]
-        if (real_name in corpus_mapping['valid']):
+        dataset = random.choices(['train', 'valid' , 'test'], [0.8, 0.1, 0.1])[0]
+        if dataset == 'valid':
             valid_files.append(f)
-        elif (real_name in corpus_mapping['test']):
+        elif dataset == 'test':
             test_files.append(f)
-        elif (real_name in corpus_mapping['train']):
+        elif dataset == 'train':
             train_files.append(f)
 
     corpora = {'train': train_files, 'valid': valid_files, 'test': test_files}
